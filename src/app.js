@@ -192,8 +192,11 @@ els.btnExportTrip.addEventListener("click", () => {
 els.btnShareTrip.addEventListener("click", async () => {
   if (!selectedTripId) return;
   const trip = getTrip(state, selectedTripId);
-  const payload = btoa(unescape(encodeURIComponent(JSON.stringify(trip))));
-  const url = `${location.origin}/pages/share.html#${payload}`;
+  import { toBase64Utf8 } from "./util.js"; // add to imports at top
+
+const payload = toBase64Utf8(JSON.stringify(trip));
+const url = `${location.origin}/pages/share.html#${payload}`;
+
   await navigator.clipboard.writeText(url).catch(() => {});
   alert("Share link copied to clipboard. Also shown in AI output panel.");
   els.aiOutput.textContent = url;

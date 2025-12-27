@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Shared Trip</title>
-  <link rel="stylesheet" href="../assets/app.css" />
+  <link rel="stylesheet" href="/assets/app.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="brand">Shared Trip</div>
     <div class="top-actions">
-      <a class="btn" href="../index.html">Open app</a>
+      <a class="btn" href="/index.html">Open app</a>
     </div>
   </header>
 
@@ -21,42 +21,52 @@
     </div>
 
     <div style="height:12px"></div>
-
     <div id="steps"></div>
   </main>
 
   <script type="module">
-    function formatDateRange(a,b){
-      if(!a && !b) return "Dates not set";
-      if(a && !b) return `From ${a}`;
-      if(!a && b) return `Until ${b}`;
+    function formatDateRange(a, b) {
+      if (!a && !b) return "Dates not set";
+      if (a && !b) return `From ${a}`;
+      if (!a && b) return `Until ${b}`;
       return `${a} → ${b}`;
     }
-    function escapeHtml(s){
+
+    function escapeHtml(s) {
       return (s ?? "").toString()
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function decodeBase64Utf8(b64) {
+      // base64 -> bytes -> utf8 string
+      const binary = atob(b64);
+      const bytes = Uint8Array.from(binary, ch => ch.charCodeAt(0));
+      return new TextDecoder().decode(bytes);
     }
 
     const hash = location.hash.replace(/^#/, "");
-    if(!hash){
+    if (!hash) {
       document.getElementById("title").textContent = "No share payload found.";
       throw new Error("Missing payload");
     }
 
-    const trip = JSON.parse(decodeURIComponent(escape(atob(hash))));
+    const trip = JSON.parse(decodeBase64Utf8(hash));
+
     document.getElementById("title").textContent = trip.title || "Trip";
     document.getElementById("dates").textContent = formatDateRange(trip.startDate, trip.endDate);
 
     const stepsEl = document.getElementById("steps");
-    for(const step of (trip.steps || [])){
+    for (const step of (trip.steps || [])) {
       const div = document.createElement("div");
       div.className = "step-card";
-      const photosHtml = (step.photos || []).slice(0,4).map(p => `
-        <img src="${p.dataUrl}" style="width:90px;height:90px;object-fit:cover;border-radius:12px;border:1px solid var(--border);margin-right:8px;" />
+
+      const photosHtml = (step.photos || []).slice(0, 4).map(p => `
+        <img src="${p.dataUrl}" alt=""
+             style="width:90px;height:90px;object-fit:cover;border-radius:12px;border:1px solid var(--border);margin-right:8px;" />
       `).join("");
 
       div.innerHTML = `

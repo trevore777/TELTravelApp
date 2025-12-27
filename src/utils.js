@@ -19,10 +19,26 @@ export function debounce(fn, ms = 400) {
 
 export async function fileToDataUrl(file) {
   const buf = await file.arrayBuffer();
-  const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+  const bytes = new Uint8Array(buf);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  const b64 = btoa(binary);
   return `data:${file.type};base64,${b64}`;
 }
 
 export function safeText(s) {
   return (s ?? "").toString();
+}
+
+export function toBase64Utf8(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = "";
+  for (const b of bytes) binary += String.fromCharCode(b);
+  return btoa(binary);
+}
+
+export function fromBase64Utf8(b64) {
+  const binary = atob(b64);
+  const bytes = Uint8Array.from(binary, ch => ch.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
 }
