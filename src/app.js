@@ -1,18 +1,22 @@
 console.log("app.js loaded");
 document.title = "Travel Journal (JS running)";
 
-
 import { loadState, saveState, createTrip, getTrip, addStep, deleteStep, deleteTrip } from "./storage.js";
-import { initMap, renderTripOnMap } from "./map.js";
+import { ensureMap, renderTripOnMap } from "./map.js";
 import { uuid, formatDateRange, fileToDataUrl, safeText } from "./util.js";
 import { searchPlaces, wikiSummary } from "./places.js";
 import { callAI } from "./ai.js";
 
 let state = loadState();
+
+// Seed a sample trip so UI isn't blank on first load
+if (!state.trips || state.trips.length === 0) {
+  const t = createTrip(state, { title: "Sample Trip", startDate: "", endDate: "" });
+  saveState(state);
+}
+
 let selectedTripId = state.trips[0]?.id || null;
 let selectedStepId = null;
-
-initMap("map");
 
 const els = {
   tripList: document.getElementById("tripList"),
@@ -65,10 +69,10 @@ function selectTrip(tripId) {
 
 function selectStep(stepId) {
   selectedStepId = stepId;
-  // open the popup on map is handled by marker click; here we just highlight by re-rendering timeline
   renderTimeline();
 }
 
+// Render
 function renderTripList() {
   els.tripList.innerHTML = "";
   for (const trip of state.trips) {
@@ -122,7 +126,8 @@ function renderTimeline() {
     card.style.outline = step.id === selectedStepId ? "2px solid rgba(74,163,255,.6)" : "none";
 
     const photosHtml = (step.photos || []).slice(0, 4).map(p => `
-      <img src="${p.dataUrl}" alt="" style="width:80px;height:80px;object-fit:cover;border-radius:12px;border:1px solid var(--border);margin-right:8px;" />
+      <img src="${p.dataUrl}" alt=""
+        style="width:80px;height:80px;object-fit:cover;border-radius:12px;border:1px solid var(--border);margin-right:8px;" />
     `).join("");
 
     card.innerHTML = `
@@ -149,9 +154,15 @@ function renderTimeline() {
   }
 }
 
-function renderMap() {
+async function renderMap() {
   const trip = selectedTripId ? getTrip(state, selectedTripId) : null;
-  renderTripOnMap(trip, (stepId) => selectStep(stepId));
+  try {
+    await ensureMap("map");
+    renderTripOnMap(trip, (stepId) => selectStep(stepId));
+  } catch (e) {
+    console.error(e);
+    // keep UI alive even if map fails
+  }
 }
 
 function render() {
@@ -161,6 +172,7 @@ function render() {
   renderMap();
 }
 
+// Buttons
 els.btnNewTrip.addEventListener("click", () => {
   const title = prompt("Trip title:", "New Trip");
   if (title === null) return;
@@ -174,16 +186,16 @@ els.btnAddStep.addEventListener("click", () => openStepModal());
 
 els.btnExportTrip.addEventListener("click", () => {
   if (!selectedTripId) return;
-  window.open(`./pages/export.html?tripId=${encodeURIComponent(selectedTripId)}`, "_blank");
+  window.open(`/pages/export.html?tripId=${encodeURIComponent(selectedTripId)}`, "_blank");
 });
 
 els.btnShareTrip.addEventListener("click", async () => {
   if (!selectedTripId) return;
   const trip = getTrip(state, selectedTripId);
   const payload = btoa(unescape(encodeURIComponent(JSON.stringify(trip))));
-  const url = `${location.origin}${location.pathname.replace(/index\.html?$/, "")}pages/share.html#${payload}`;
+  const url = `${location.origin}/pages/share.html#${payload}`;
   await navigator.clipboard.writeText(url).catch(() => {});
-  alert("Share link copied to clipboard (or use the URL shown next).");
+  alert("Share link copied to clipboard. Also shown in AI output panel.");
   els.aiOutput.textContent = url;
 });
 
@@ -252,6 +264,7 @@ els.btnSaveStep.addEventListener("click", async () => {
     alert("Please select a place from search results or use your location.");
     return;
   }
+
   const photosFiles = Array.from(els.photos.files || []);
   const photos = [];
   for (const f of photosFiles.slice(0, 6)) {
@@ -275,12 +288,15 @@ els.btnSaveStep.addEventListener("click", async () => {
   render();
 });
 
-// AI buttons
+// AI actions
 async function runAI(task) {
   const trip = selectedTripId ? getTrip(state, selectedTripId) : null;
   if (!trip) return alert("Select a trip first.");
 
-  const step = selectedStepId ? trip.steps.find(s => s.id === selectedStepId) : trip.steps[trip.steps.length - 1];
+  const step = selectedStepId
+    ? trip.steps.find(s => s.id === selectedStepId)
+    : trip.steps[trip.steps.length - 1];
+
   if (!step) return alert("Add/select a step first.");
 
   els.aiStatus.textContent = "Working…";
@@ -291,11 +307,7 @@ async function runAI(task) {
 
     const payload = {
       task,
-      trip: {
-        title: trip.title,
-        startDate: trip.startDate,
-        endDate: trip.endDate
-      },
+      trip: { title: trip.title, startDate: trip.startDate, endDate: trip.endDate },
       step: {
         title: step.title,
         label: step.place?.label,
@@ -305,13 +317,10 @@ async function runAI(task) {
         departureDate: step.departureDate,
         notes: step.notes
       },
-      sources: {
-        wikipedia: wiki
-      }
+      sources: { wikipedia: wiki }
     };
 
     const out = await callAI(payload);
-
     els.aiOutput.textContent = safeText(out.text);
     if (out.links?.length) {
       els.aiOutput.textContent += "\n\nLinks:\n" + out.links.map(l => `- ${l}`).join("\n");
@@ -328,7 +337,6 @@ els.btnAIPlanDays.addEventListener("click", () => runAI("plan_days"));
 els.btnAIFlights.addEventListener("click", () => runAI("flight_options"));
 els.btnAIAccom.addEventListener("click", () => runAI("accom_options"));
 
-// Initial render
 render();
 
 function escapeHtml(s) {

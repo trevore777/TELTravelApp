@@ -3,10 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Travel Journal (Polarsteps-style)</title>
+  <title>Travel Journal</title>
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="./assets/app.css" />
+  <!-- Leaflet CSS (CDN with local fallback) -->
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        onerror="this.href='/lib/leaflet/leaflet.css';" />
+
+  <!-- App CSS (absolute path for Vercel) -->
+  <link rel="stylesheet" href="/assets/app.css" />
 </head>
 <body>
   <header class="topbar">
@@ -96,7 +101,7 @@
       <label class="field">
         <span>Photos (optional)</span>
         <input id="photos" type="file" accept="image/*" multiple />
-        <div class="muted">Tip: use a few small images for localStorage. You can compress later.</div>
+        <div class="muted">Tip: keep images small for localStorage.</div>
       </label>
 
       <div class="grid2">
@@ -106,7 +111,30 @@
     </div>
   </div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script type="module" src="./src/app.js"></script>
+  <!-- Leaflet JS (CDN with local fallback) -->
+  <script>
+    function loadLocalLeaflet() {
+      if (window.L) return;
+
+      const css = document.createElement("link");
+      css.rel = "stylesheet";
+      css.href = "/lib/leaflet/leaflet.css";
+      document.head.appendChild(css);
+
+      const s = document.createElement("script");
+      s.src = "/lib/leaflet/leaflet.js";
+      s.onload = () => console.log("Loaded local Leaflet.");
+      s.onerror = () => console.error("Failed to load local Leaflet from /lib/leaflet/leaflet.js");
+      document.body.appendChild(s);
+    }
+  </script>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          onload="console.log('Loaded Leaflet from CDN.');"
+          onerror="console.warn('Leaflet CDN failed; using local.'); loadLocalLeaflet();">
+  </script>
+
+  <!-- App entry (absolute path) -->
+  <script type="module" src="/src/app.js"></script>
 </body>
 </html>
