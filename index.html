@@ -5,12 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Travel Journal</title>
 
-  <!-- Leaflet CSS (CDN with local fallback) -->
-  <link rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        onerror="this.href='/lib/leaflet/leaflet.css';" />
-
-  <!-- App CSS (absolute path for Vercel) -->
+  <link rel="stylesheet" href="/lib/leaflet/leaflet.css" />
   <link rel="stylesheet" href="/assets/app.css" />
 </head>
 <body>
@@ -38,14 +33,12 @@
 
       <div class="panel">
         <div class="panel-title">AI</div>
-
         <div class="ai-actions">
           <button id="btnAIPlaceInfo" class="btn">About this place</button>
           <button id="btnAIPlanDays" class="btn">Plan next days</button>
           <button id="btnAIFlights" class="btn">Flight options</button>
           <button id="btnAIAccom" class="btn">Accommodation options</button>
         </div>
-
         <div id="aiStatus" class="muted"></div>
         <div id="aiOutput" class="ai-output"></div>
       </div>
@@ -111,30 +104,8 @@
     </div>
   </div>
 
-  <!-- Leaflet JS (CDN with local fallback) -->
-  <script>
-    function loadLocalLeaflet() {
-      if (window.L) return;
-
-      const css = document.createElement("link");
-      css.rel = "stylesheet";
-      css.href = "/lib/leaflet/leaflet.css";
-      document.head.appendChild(css);
-
-      const s = document.createElement("script");
-      s.src = "/lib/leaflet/leaflet.js";
-      s.onload = () => console.log("Loaded local Leaflet.");
-      s.onerror = () => console.error("Failed to load local Leaflet from /lib/leaflet/leaflet.js");
-      document.body.appendChild(s);
-    }
-  </script>
-
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-          onload="console.log('Loaded Leaflet from CDN.');"
-          onerror="console.warn('Leaflet CDN failed; using local.'); loadLocalLeaflet();">
-  </script>
-
-  <!-- App entry (absolute path) -->
+  <!-- Local Leaflet + App entry -->
+  <script src="/lib/leaflet/leaflet.js"></script>
   <script type="module" src="/src/app.js"></script>
 </body>
 </html>
