@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Shared Trip</title>
+  <link rel="stylesheet" href="../assets/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Shared Trip</div>
+    <div class="top-actions">
+      <a class="btn" href="../index.html">Open app</a>
+    </div>
+  </header>
+
+  <main class="content">
+    <div class="panel">
+      <div class="panel-title" id="title"></div>
+      <div class="muted" id="dates"></div>
+    </div>
+
+    <div style="height:12px"></div>
+
+    <div id="steps"></div>
+  </main>
+
+  <script type="module">
+    function formatDateRange(a,b){
+      if(!a && !b) return "Dates not set";
+      if(a && !b) return `From ${a}`;
+      if(!a && b) return `Until ${b}`;
+      return `${a} → ${b}`;
+    }
+    function escapeHtml(s){
+      return (s ?? "").toString()
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    const hash = location.hash.replace(/^#/, "");
+    if(!hash){
+      document.getElementById("title").textContent = "No share payload found.";
+      throw new Error("Missing payload");
+    }
+
+    const trip = JSON.parse(decodeURIComponent(escape(atob(hash))));
+    document.getElementById("title").textContent = trip.title || "Trip";
+    document.getElementById("dates").textContent = formatDateRange(trip.startDate, trip.endDate);
+
+    const stepsEl = document.getElementById("steps");
+    for(const step of (trip.steps || [])){
+      const div = document.createElement("div");
+      div.className = "step-card";
+      const photosHtml = (step.photos || []).slice(0,4).map(p => `
+        <img src="${p.dataUrl}" style="width:90px;height:90px;object-fit:cover;border-radius:12px;border:1px solid var(--border);margin-right:8px;" />
+      `).join("");
+
+      div.innerHTML = `
+        <div class="step-title">${escapeHtml(step.title || step.place?.label || "Step")}</div>
+        <div class="step-sub">${escapeHtml(formatDateRange(step.arrivalDate, step.departureDate))}</div>
+        <div class="step-sub">${escapeHtml(step.place?.label || "")}</div>
+        ${photosHtml ? `<div style="margin-top:10px; display:flex; flex-wrap:wrap;">${photosHtml}</div>` : ""}
+        ${step.notes ? `<div class="step-notes">${escapeHtml(step.notes)}</div>` : ""}
+      `;
+      stepsEl.appendChild(div);
+      stepsEl.appendChild(document.createElement("div")).style.height = "10px";
+    }
+  </script>
+</body>
+</html>

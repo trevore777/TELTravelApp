@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Travel Journal (Polarsteps-style)</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="./assets/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Travel Journal</div>
+    <div class="top-actions">
+      <button id="btnNewTrip" class="btn">New trip</button>
+      <button id="btnExportTrip" class="btn">Export</button>
+      <button id="btnShareTrip" class="btn">Share</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <div class="panel">
+        <div class="panel-title">Trips</div>
+        <div id="tripList" class="list"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Selected trip</div>
+        <div id="tripMeta" class="meta"></div>
+        <button id="btnAddStep" class="btn btn-primary">Add step</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">AI</div>
+
+        <div class="ai-actions">
+          <button id="btnAIPlaceInfo" class="btn">About this place</button>
+          <button id="btnAIPlanDays" class="btn">Plan next days</button>
+          <button id="btnAIFlights" class="btn">Flight options</button>
+          <button id="btnAIAccom" class="btn">Accommodation options</button>
+        </div>
+
+        <div id="aiStatus" class="muted"></div>
+        <div id="aiOutput" class="ai-output"></div>
+      </div>
+    </aside>
+
+    <section class="content">
+      <div class="tabs">
+        <button class="tab active" data-tab="map">Map</button>
+        <button class="tab" data-tab="timeline">Timeline</button>
+      </div>
+
+      <div id="tabMap" class="tab-pane active">
+        <div id="map"></div>
+      </div>
+
+      <div id="tabTimeline" class="tab-pane">
+        <div id="timeline"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Step modal -->
+  <div id="modalBackdrop" class="backdrop hidden"></div>
+  <div id="stepModal" class="modal hidden">
+    <div class="modal-header">
+      <div class="modal-title" id="stepModalTitle">Add step</div>
+      <button id="btnCloseModal" class="btn btn-ghost">Close</button>
+    </div>
+
+    <div class="modal-body">
+      <label class="field">
+        <span>Place search</span>
+        <input id="placeQuery" type="text" placeholder="e.g., Shibuya, Tokyo" />
+        <div id="placeResults" class="results"></div>
+      </label>
+
+      <div class="grid2">
+        <label class="field">
+          <span>Arrival date</span>
+          <input id="arrivalDate" type="date" />
+        </label>
+        <label class="field">
+          <span>Departure date</span>
+          <input id="departureDate" type="date" />
+        </label>
+      </div>
+
+      <label class="field">
+        <span>Notes</span>
+        <textarea id="notes" rows="5" placeholder="What happened here?"></textarea>
+      </label>
+
+      <label class="field">
+        <span>Photos (optional)</span>
+        <input id="photos" type="file" accept="image/*" multiple />
+        <div class="muted">Tip: use a few small images for localStorage. You can compress later.</div>
+      </label>
+
+      <div class="grid2">
+        <button id="btnUseMyLocation" class="btn">Use my location</button>
+        <button id="btnSaveStep" class="btn btn-primary">Save step</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>
