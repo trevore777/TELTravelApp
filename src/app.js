@@ -1,3 +1,7 @@
+console.log("app.js loaded");
+document.title = "Travel Journal (JS running)";
+
+
 import { loadState, saveState, createTrip, getTrip, addStep, deleteStep, deleteTrip } from "./storage.js";
 import { initMap, renderTripOnMap } from "./map.js";
 import { uuid, formatDateRange, fileToDataUrl, safeText } from "./util.js";
